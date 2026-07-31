@@ -1,24 +1,118 @@
+const SIMPLE_FOOD_QUESTIONS = [
+  {
+    id:'fruit', icon:'🍌', question:'Har du spist en banan eller annen frukt i dag?',
+    yes:'Kjempebra! Frukt gir energi til skole, aktivitet og trening.',
+    no:'Helt greit. En banan, et eple eller bær kan passe senere.'
+  },
+  {
+    id:'yoghurt', icon:'🥣', question:'Har du spist yoghurt, melk eller ost i dag?',
+    yes:'Sterkt valg! Det gir protein og kalsium til en kropp som vokser.',
+    no:'Ikke noe problem. Yoghurt, melk eller ost kan være et enkelt mellommåltid.'
+  },
+  {
+    id:'proteinFood', icon:'🍗', question:'Har du spist kylling, kjøtt, fisk, egg eller bønner?',
+    yes:'Bra jobbet! Det er vanlig mat som hjelper kroppen å bygge og reparere.',
+    no:'Helt i orden. Prøv å få med én slik proteinkilde i et senere måltid.'
+  },
+  {
+    id:'carbs', icon:'🍚', question:'Har du spist brød, havre, ris eller potet i dag?',
+    yes:'Supert! Karbohydrater gir energi så kroppen kan trene og vokse.',
+    no:'Det kan du ta igjen senere. Kroppen trenger også energi, ikke bare protein.'
+  },
+  {
+    id:'water', icon:'💧', question:'Har du drukket vann i dag?',
+    yes:'Bra! En enkel vane som hjelper både konsentrasjon og trening.',
+    no:'Ta et glass nå eller til neste måltid. Små valg teller.'
+  }
+];
+
+function ensureSimpleNutrition(n) {
+  if (!n.simple) n.simple = {};
+  if (!n.simpleFeedback) n.simpleFeedback = {};
+  return n.simple;
+}
+
+function renderSimpleFoodCheck(n) {
+  const simple=ensureSimpleNutrition(n);
+  const answered=SIMPLE_FOOD_QUESTIONS.filter(q=>typeof simple[q.id]==='boolean').length;
+  return `<div class="card tip-card">
+    <div class="card-row"><div class="icon-bubble">⭐</div><div><div class="mini-label">Dagens enkle matinnsjekk</div><h3 style="margin:4px 0">${answered}/${SIMPLE_FOOD_QUESTIONS.length} spørsmål besvart</h3><p class="subtle" style="font-size:12px;margin:0">Ingen fasit og ingen dårlig samvittighet. Bare en enkel påminnelse om mat som hjelper kroppen å vokse.</p></div></div>
+  </div>
+  <div style="display:grid;gap:9px;margin-top:10px">${SIMPLE_FOOD_QUESTIONS.map(q=>{
+    const answer=simple[q.id];
+    const feedback=n.simpleFeedback[q.id]||'';
+    return `<article class="card" style="margin:0">
+      <div class="card-row"><div class="icon-bubble ${q.id==='water'?'blue':''}">${q.icon}</div><div><strong>${q.question}</strong>${feedback?`<p class="subtle" style="font-size:12px;margin:6px 0 0">${feedback}</p>`:''}</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+        <button class="btn ${answer===true?'btn-primary':'btn-secondary'} btn-small" data-simple-food="${q.id}" data-answer="yes">${answer===true?'✓ Ja':'Ja 👍'}</button>
+        <button class="btn ${answer===false?'btn-primary':'btn-secondary'} btn-small" data-simple-food="${q.id}" data-answer="no">${answer===false?'✓ Ikke ennå':'Ikke ennå'}</button>
+      </div>
+    </article>`;
+  }).join('')}</div>`;
+}
+
+function answerSimpleFood(questionId, answer) {
+  const n=getNutrition();
+  const simple=ensureSimpleNutrition(n);
+  const q=SIMPLE_FOOD_QUESTIONS.find(item=>item.id===questionId);
+  if(!q) return;
+  simple[questionId]=answer;
+  n.simpleFeedback[questionId]=answer?q.yes:q.no;
+  save(KEYS.nutrition,nutritionStore);
+  vibrate(15);
+  toast(answer?q.yes:q.no);
+
+  const answered=SIMPLE_FOOD_QUESTIONS.filter(item=>typeof simple[item.id]==='boolean').length;
+  const yesCount=SIMPLE_FOOD_QUESTIONS.filter(item=>simple[item.id]===true).length;
+  if(answered===SIMPLE_FOOD_QUESTIONS.length && !n.simpleCheckRewarded) {
+    n.simpleCheckRewarded=true;
+    save(KEYS.nutrition,nutritionStore);
+    addXp(12);
+    showFoodCheckCelebration(yesCount);
+  }
+  renderNutrition();
+  renderHome();
+}
+
+function showFoodCheckCelebration(yesCount) {
+  const strongDay=yesCount>=3;
+  if(strongDay) confetti();
+  openModal(`<button class="modal-close" data-close>✕</button>
+    <div style="text-align:center;padding:9px 2px 3px">
+      <div style="font-size:58px">${strongDay?'🌟':'👏'}</div>
+      <div class="eyebrow">+12 XP for innsjekken</div>
+      <h2 style="font-size:28px;margin-top:8px">${strongDay?'Bra matdag, Ulrik!':'Bra at du sjekket inn!'}</h2>
+      <p class="subtle">${strongDay?'Du har gitt kroppen flere av byggesteinene den trenger. Fortsett med vanlige måltider og ikke stress med å være perfekt.':'Det viktigste er å være ærlig og ta ett godt valg om gangen. Du kan fortsatt få inn frukt, vann eller et ordentlig måltid senere.'}</p>
+      <div class="notice safe"><strong>Dagens seier:</strong> Du tok ansvar for en enkel vane. Det er slik fremgang bygges over tid.</div>
+      <button class="btn btn-primary btn-block" style="margin-top:13px" data-close>Bra – videre!</button>
+    </div>`);
+}
+
 function renderNutrition() {
   const date=localDate(), n=getNutrition(date), t=proteinTarget(); const pct=Math.min(100,Math.round(n.protein/t.low*100)); const training=(profile.days||[]).includes(new Date().getDay());
+  ensureSimpleNutrition(n);
   document.getElementById('nutritionView').innerHTML=`
-    <div class="section-head" style="margin-top:5px"><div><div class="eyebrow">Vanlig mat først</div><h2 style="margin-top:6px">Dagens drivstoff</h2></div><small>${fmtDate(date,{weekday:'short',day:'numeric',month:'short'})}</small></div>
-    <div class="card card-row"><div class="nutrition-ring" style="--pct:${pct}%"><span><strong>${n.protein} g</strong><small>${t.low}–${t.high} g</small></span></div><div><h3 style="margin:0 0 5px">Moderat proteinområde</h3><p class="subtle" style="font-size:12px;margin:0">Basert på ${profile.weight} kg og tre økter i uken. Dette er en praktisk guide, ikke et krav om å treffe perfekt.</p></div></div>
+    <div class="section-head" style="margin-top:5px"><div><div class="eyebrow">Enkelt og positivt</div><h2 style="margin-top:6px">Dagens mat</h2></div><small>${fmtDate(date,{weekday:'short',day:'numeric',month:'short'})}</small></div>
+    ${renderSimpleFoodCheck(n)}
+    <div class="section-head"><h2>Proteinoversikt</h2><small>frivillig detalj</small></div>
+    <div class="card card-row"><div class="nutrition-ring" style="--pct:${pct}%"><span><strong>${n.protein} g</strong><small>${t.low}–${t.high} g</small></span></div><div><h3 style="margin:0 0 5px">Moderat proteinområde</h3><p class="subtle" style="font-size:12px;margin:0">Basert på ${profile.weight} kg og tre økter i uken. Dette er en praktisk guide, ikke en prøve han må bestå.</p></div></div>
     <div class="notice safe" style="margin-top:11px"><strong>Viktig:</strong> Muskelvekst krever også nok total mat, karbohydrater, sunt fett, vitaminer og mineraler. Ikke kutt mat for å bli «mer definert» mens kroppen vokser.</div>
-    <div class="section-head"><h2>Legg til protein</h2><small>omtrentlige verdier</small></div>
+    <div class="section-head"><h2>Legg til vanlig mat</h2><small>omtrentlige proteinverdier</small></div>
     <div class="food-grid">${FOODS.map((f,i)=>`<button class="food-chip" data-food="${i}"><strong>${f.icon} ${f.name}</strong><small>+ ca. ${f.grams} g</small></button>`).join('')}</div>
     <div class="card" style="margin-top:10px"><div class="card-row"><input id="manualProtein" class="input" type="number" min="1" max="100" inputmode="numeric" placeholder="Annet, gram protein"><button id="addManualProtein" class="btn btn-primary btn-small">Legg til</button></div>${n.items.length?`<div style="margin-top:12px">${n.items.map((x,i)=>`<span class="pill" style="display:inline-flex;margin:3px">${escapeHTML(x.name)} +${x.grams} g <button data-remove-food="${i}" style="border:0;background:none;color:var(--red);padding:0 0 0 6px">×</button></span>`).join('')}</div>`:''}</div>
-    <div class="section-head"><h2>Dagens sjekkliste</h2><small>mer enn bare protein</small></div>
+    <div class="section-head"><h2>Flere gode valg</h2><small>mer enn bare protein</small></div>
     <div class="card checklist">${[
-      ['meals','3–4 hovedmåltider og 1–2 mellommåltider ved behov'],['carbs',training?'Karbohydrater før/etter trening':'Karbohydrater til energi og vekst'],['produce','Frukt eller grønnsaker flere ganger'],['calcium','Melk, yoghurt, ost eller annet kalsiumrikt'],['water','Vann til måltider og jevnlig gjennom dagen']
+      ['meals','Jeg har spist ordentlige måltider i dag'],['carbs',training?'Jeg fikk energi før eller etter trening':'Jeg har spist mat som gir energi'],['produce','Jeg har spist frukt eller grønnsaker'],['calcium','Jeg har fått melk, yoghurt, ost eller annet kalsiumrikt'],['water','Jeg har drukket vann jevnlig']
     ].map(([id,label])=>`<label class="check-item"><input type="checkbox" data-nut-check="${id}" ${n.checks[id]?'checked':''}><span>${label}</span></label>`).join('')}</div>
     <div class="section-head"><h2>${training?'Forslag på treningsdag':'Forslag på hviledag'}</h2><small>bytt med mat han liker</small></div>
     <div class="card meal-plan">${renderMealPlan(training)}</div>
     <div class="card notice" style="margin-top:11px"><strong>Etter trening:</strong> Et vanlig måltid eller mellommåltid med både protein og karbohydrat er nok. Proteinpulver er ikke nødvendig.</div>`;
   const root=document.getElementById('nutritionView');
-  root.querySelectorAll('[data-food]').forEach(b=>b.onclick=()=>{const f=FOODS[Number(b.dataset.food)];n.protein+=f.grams;n.items.push({name:f.name,grams:f.grams});save(KEYS.nutrition,nutritionStore);addXp(2);renderNutrition();renderHome();toast(`+${f.grams} g registrert`);});
-  root.querySelector('#addManualProtein').onclick=()=>{const v=Number(root.querySelector('#manualProtein').value);if(!v)return toast('Skriv inn antall gram.');n.protein+=v;n.items.push({name:'Annet',grams:v});save(KEYS.nutrition,nutritionStore);renderNutrition();renderHome();};
+  root.querySelectorAll('[data-simple-food]').forEach(b=>b.onclick=()=>answerSimpleFood(b.dataset.simpleFood,b.dataset.answer==='yes'));
+  root.querySelectorAll('[data-food]').forEach(b=>b.onclick=()=>{const f=FOODS[Number(b.dataset.food)];n.protein+=f.grams;n.items.push({name:f.name,grams:f.grams});save(KEYS.nutrition,nutritionStore);addXp(2);renderNutrition();renderHome();toast(`Bra registrert: ${f.name} 💪`);});
+  root.querySelector('#addManualProtein').onclick=()=>{const v=Number(root.querySelector('#manualProtein').value);if(!v)return toast('Skriv inn antall gram.');n.protein+=v;n.items.push({name:'Annet',grams:v});save(KEYS.nutrition,nutritionStore);renderNutrition();renderHome();toast('Fint – maten er registrert.');};
   root.querySelectorAll('[data-remove-food]').forEach(b=>b.onclick=()=>{const item=n.items.splice(Number(b.dataset.removeFood),1)[0];n.protein=Math.max(0,n.protein-item.grams);save(KEYS.nutrition,nutritionStore);renderNutrition();renderHome();});
-  root.querySelectorAll('[data-nut-check]').forEach(c=>c.onchange=()=>{n.checks[c.dataset.nutCheck]=c.checked;save(KEYS.nutrition,nutritionStore);if(c.checked)addXp(2);renderHome();});
+  root.querySelectorAll('[data-nut-check]').forEach(c=>c.onchange=()=>{n.checks[c.dataset.nutCheck]=c.checked;save(KEYS.nutrition,nutritionStore);if(c.checked){addXp(2);toast('Bra valg! Små vaner bygger en sterk hverdag.');}renderHome();});
 }
 function renderMealPlan(training) {
   const meals=training?[
@@ -53,7 +147,7 @@ function renderHabits() {
     <div class="notice" style="margin-top:11px"><strong>Om skjermtid:</strong> Det er mest presist å si at sen skjermbruk kan forstyrre søvn. God søvn er viktig for restitusjon og normal hormonbalanse.</div>
     <div class="card" style="margin-top:11px"><h3>Leggetid: ${profile.bedtime||'ikke satt'}</h3><p class="subtle" style="font-size:12px">Appen viser en påminnelse når den åpnes på kvelden. Du kan også legge en søvnpåminnelse i iPhone-kalenderen.</p><button id="sleepCalendar" class="btn btn-secondary btn-block">Legg søvnpåminnelse i kalender</button></div>`;
   const root=document.getElementById('habitsView');
-  root.querySelectorAll('[data-habit]').forEach(b=>b.onclick=()=>{h[b.dataset.habit]=!h[b.dataset.habit];save(KEYS.habits,habitsStore);if(h[b.dataset.habit])addXp(5);renderHabits();renderHome();vibrate(15);});
+  root.querySelectorAll('[data-habit]').forEach(b=>b.onclick=()=>{h[b.dataset.habit]=!h[b.dataset.habit];save(KEYS.habits,habitsStore);if(h[b.dataset.habit]){addXp(5);toast('Sterkt valg! Du bygger vanen, ikke bare kroppen.');}renderHabits();renderHome();vibrate(15);});
   root.querySelector('#sleepCalendar').onclick=downloadSleepCalendar;
 }
 
