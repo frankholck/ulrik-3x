@@ -1,0 +1,14 @@
+{
+  "name": "Ulrik 3X – Privat trening",
+  "short_name": "Ulrik 3X",
+  "description": "Tre trygge kroppsvektøkter, matguide, gode vaner og privat progresjon.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#09101d",
+  "theme_color": "#09101d",
+  "icons": [
+    {"src":"icons/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}
