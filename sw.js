@@ -1,5 +1,5 @@
-const CACHE='ulrik-3x-v3';
-const FILES=['./','./index.html','./styles.css','./js/app-data.js','./js/app-core.js','./js/app-workouts.js','./js/app-nutrition-progress.js','./js/app-settings.js','./manifest.webmanifest','./icons/icon.svg'];
+const CACHE='ulrik-3x-v4';
+const FILES=['./','./index.html','./styles.css','./js/app-data.js','./js/app-core.js','./js/app-workouts.js','./js/app-nutrition-progress.js','./js/app-settings.js','./js/app-motivation.js','./manifest.webmanifest','./icons/icon.svg'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(key=>key!==CACHE).map(key=>caches.delete(key)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{
