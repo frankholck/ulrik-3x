@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#09101d" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Ulrik 3X" />
+  <meta name="description" content="Privat treningsapp for Ulrik – tre trygge kroppsvektøkter, matguide og progresjon." />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Ulrik 3X</title>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <button class="brand" data-nav="home" aria-label="Gå hjem">
+        <span class="brand-mark">U3</span>
+        <span><strong>ULRIK 3X</strong><small>STERKERE • SMARTERE</small></span>
+      </button>
+      <button id="settingsBtn" class="icon-btn" aria-label="Innstillinger">⚙️</button>
+    </header>
+
+    <main id="main" class="main-content">
+      <section id="homeView" class="view active" data-view="home"></section>
+      <section id="workoutsView" class="view" data-view="workouts"></section>
+      <section id="nutritionView" class="view" data-view="nutrition"></section>
+      <section id="progressView" class="view" data-view="progress"></section>
+      <section id="habitsView" class="view" data-view="habits"></section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Hovedmeny">
+      <button class="nav-item active" data-nav="home"><span>⌂</span><small>Hjem</small></button>
+      <button class="nav-item" data-nav="workouts"><span>⚡</span><small>Trening</small></button>
+      <button class="nav-item" data-nav="nutrition"><span>🥗</span><small>Mat</small></button>
+      <button class="nav-item" data-nav="progress"><span>↗</span><small>Fremgang</small></button>
+      <button class="nav-item" data-nav="habits"><span>☀</span><small>Sterk hverdag</small></button>
+    </nav>
+  </div>
+
+  <div id="onboarding" class="screen-overlay hidden" role="dialog" aria-modal="true"></div>
+  <div id="lockScreen" class="screen-overlay hidden" role="dialog" aria-modal="true"></div>
+  <div id="workoutSession" class="screen-overlay hidden" role="dialog" aria-modal="true"></div>
+  <div id="modal" class="modal-overlay hidden" role="dialog" aria-modal="true"><div class="modal-card" id="modalCard"></div></div>
+  <div id="toast" class="toast hidden" role="status"></div>
+  <div id="confetti" class="confetti-layer" aria-hidden="true"></div>
+
+  <script src="js/app-data.js"></script>
+  <script src="js/app-core.js"></script>
+  <script src="js/app-workouts.js"></script>
+  <script src="js/app-nutrition-progress.js"></script>
+  <script src="js/app-settings.js"></script>
+</body>
+</html>
